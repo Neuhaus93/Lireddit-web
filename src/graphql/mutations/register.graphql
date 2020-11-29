@@ -1,11 +1,5 @@
-mutation Register($values: UsernamePasswordInput!) {
+mutation Register($values: RegisterInput!) {
   register(values: $values) {
-    errors {
-      field
-      message
-    }
-    user {
-      ...RegularUser
-    }
+    ...RegularUserResponse
   }
 }

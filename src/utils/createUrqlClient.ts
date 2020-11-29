@@ -1,5 +1,6 @@
 import { cacheExchange } from '@urql/exchange-graphcache';
 import { dedupExchange, fetchExchange } from 'urql';
+import { devtoolsExchange } from '@urql/devtools';
 
 import {
   LogoutMutation,
@@ -10,62 +11,65 @@ import {
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 
-export const createUrqlClient = (ssrExchange: any) => ({
+export const createUrqlClient = (ssrExchange?: any) => ({
   url: 'http://localhost:4000/graphql',
   fetchOptions: {
     credentials: 'include' as const,
   },
   exchanges: [
+    devtoolsExchange,
     dedupExchange,
-    cacheExchange({
-      updates: {
-        Mutation: {
-          logout: (_result, _, cache, __) => {
-            betterUpdateQuery<LogoutMutation, MeQuery>(
-              cache,
-              { query: MeDocument },
-              _result,
-              () => ({ me: null })
-            );
-          },
-
-          login: (_result, _, cache, __) => {
-            betterUpdateQuery<LoginMutation, MeQuery>(
-              cache,
-              { query: MeDocument },
-              _result,
-              (result, query) => {
-                if (result.login.errors) {
-                  return query;
-                } else {
-                  return {
-                    me: result.login.user,
-                  };
-                }
-              }
-            );
-          },
-
-          register: (_result, _, cache, __) => {
-            betterUpdateQuery<RegisterMutation, MeQuery>(
-              cache,
-              { query: MeDocument },
-              _result,
-              (result, query) => {
-                if (result.register.errors) {
-                  return query;
-                } else {
-                  return {
-                    me: result.register.user,
-                  };
-                }
-              }
-            );
-          },
-        },
-      },
-    }),
+    cache,
     ssrExchange,
     fetchExchange,
   ],
+});
+
+const cache = cacheExchange({
+  updates: {
+    Mutation: {
+      logout: (_result, _, cache, __) => {
+        betterUpdateQuery<LogoutMutation, MeQuery>(
+          cache,
+          { query: MeDocument },
+          _result,
+          () => ({ me: null })
+        );
+      },
+
+      login: (_result, _, cache, __) => {
+        betterUpdateQuery<LoginMutation, MeQuery>(
+          cache,
+          { query: MeDocument },
+          _result,
+          (result, query) => {
+            if (result.login.errors) {
+              return query;
+            } else {
+              return {
+                me: result.login.user,
+              };
+            }
+          }
+        );
+      },
+
+      register: (_result, _, cache, __) => {
+        betterUpdateQuery<RegisterMutation, MeQuery>(
+          cache,
+          { query: MeDocument },
+          _result,
+          (result, query) => {
+            if (result.register.errors) {
+              return query;
+            } else {
+              return {
+                me: result.register.user,
+              };
+            }
+          }
+        );
+      },
+    },
+  },
 });

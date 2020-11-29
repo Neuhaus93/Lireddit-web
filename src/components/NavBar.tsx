@@ -51,5 +51,3 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
     </Flex>
   );
 };
-
-export default NavBar;
