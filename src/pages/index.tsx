@@ -2,18 +2,18 @@ import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import { Post, usePostsConnectionQuery } from '../generated/graphql';
+import {
+  PostsConnectionQuery,
+  usePostsConnectionQuery,
+} from '../generated/graphql';
 import { createUrqlClient } from '../utils/createUrqlClient';
 
 type PageState = 'loading' | 'error' | 'success';
 type PostsType = Array<
-  { __typename?: 'Post' } & Pick<
-    Post,
-    'id' | 'title' | 'textSnippet' | 'createdAt' | 'updatedAt'
-  >
+  PostsConnectionQuery['postsConnection']['edges'][number]['node']
 >;
 
-const POSTS_LIMIT = 10;
+const POSTS_LIMIT = 5;
 
 const Index = () => {
   const [variables, setVariables] = useState({
@@ -110,7 +110,12 @@ const Body = ({
         <>
           <Stack spacing={8}>
             {posts.map((p) => (
-              <EachPost key={p.id} title={p.title} text={p.textSnippet} />
+              <EachPost
+                key={p.id}
+                title={p.title}
+                text={p.textSnippet}
+                creatorName={p.creator.username}
+              />
             ))}
           </Stack>
           {hasNextPage && (
@@ -129,13 +134,14 @@ const Body = ({
   }
 };
 
-interface PostProps {
+interface EachPostProps {
   title: string;
   text: string;
+  creatorName: string;
 }
 
-const EachPost = (props: PostProps) => {
-  const { title, text } = props;
+const EachPost = (props: EachPostProps) => {
+  const { title, text, creatorName } = props;
   const shownText =
     text.length === 50
       ? text[49] === ' '
@@ -145,7 +151,8 @@ const EachPost = (props: PostProps) => {
 
   return (
     <Box p={5} shadow='md' borderWidth='1px'>
-      <Heading fontSize='xl'>{title}</Heading>
+      <Heading fontSize='xl'>{title}</Heading>{' '}
+      <Text>posted by {creatorName}</Text>
       <Text mt={4}>{shownText}</Text>
     </Box>
   );

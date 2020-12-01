@@ -47,6 +47,16 @@ const cache = cacheExchange({
   },
   updates: {
     Mutation: {
+      createPost: (_result, args, cache, info) => {
+        const allFields = cache.inspectFields('Query');
+        const fieldInfos = allFields.filter(
+          (info) => info.fieldName === 'postsConnection'
+        );
+        fieldInfos.forEach((fi) => {
+          cache.invalidate('Query', 'postsConnection', fi.arguments || {});
+        });
+      },
+
       logout: (_result, _, cache, __) => {
         betterUpdateQuery<LogoutMutation, MeQuery>(
           cache,

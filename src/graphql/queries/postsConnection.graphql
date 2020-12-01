@@ -9,6 +9,10 @@ query PostsConnection($first: Int!, $after: String!) {
         id
         title
         textSnippet
+        creator {
+          id
+          username
+        }
         createdAt
         updatedAt
       }
