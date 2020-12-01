@@ -2,6 +2,7 @@ import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import { UpdootSection } from '../components/UpdootSection';
 import {
   PostsConnectionQuery,
   usePostsConnectionQuery,
@@ -112,8 +113,10 @@ const Body = ({
             {posts.map((p) => (
               <EachPost
                 key={p.id}
+                postId={p.id}
                 title={p.title}
                 text={p.textSnippet}
+                points={p.points}
                 creatorName={p.creator.username}
               />
             ))}
@@ -135,13 +138,15 @@ const Body = ({
 };
 
 interface EachPostProps {
+  postId: number;
   title: string;
   text: string;
+  points: number;
   creatorName: string;
 }
 
 const EachPost = (props: EachPostProps) => {
-  const { title, text, creatorName } = props;
+  const { title, text, creatorName, points, postId } = props;
   const shownText =
     text.length === 50
       ? text[49] === ' '
@@ -150,11 +155,14 @@ const EachPost = (props: EachPostProps) => {
       : text;
 
   return (
-    <Box p={5} shadow='md' borderWidth='1px'>
-      <Heading fontSize='xl'>{title}</Heading>{' '}
-      <Text>posted by {creatorName}</Text>
-      <Text mt={4}>{shownText}</Text>
-    </Box>
+    <Flex p={5} shadow='md' borderWidth='1px'>
+      <UpdootSection points={points} postId={postId} />
+      <Box ml={4}>
+        <Heading fontSize='xl'>{title}</Heading>{' '}
+        <Text>posted by {creatorName}</Text>
+        <Text mt={4}>{shownText}</Text>
+      </Box>
+    </Flex>
   );
 };
 

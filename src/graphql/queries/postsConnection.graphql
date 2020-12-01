@@ -9,6 +9,7 @@ query PostsConnection($first: Int!, $after: String!) {
         id
         title
         textSnippet
+        points
         creator {
           id
           username
