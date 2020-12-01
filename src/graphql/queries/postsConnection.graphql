@@ -1,0 +1,17 @@
+query PostsConnection($first: Int!, $after: String!) {
+  postsConnection(first: $first, after: $after) {
+    pageInfo {
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        title
+        textSnippet
+        createdAt
+        updatedAt
+      }
+    }
+  }
+}

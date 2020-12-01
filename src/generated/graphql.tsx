@@ -17,14 +17,40 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
-  posts: Array<Post>;
+  postsConnection: PostsConnection;
   post?: Maybe<Post>;
   me?: Maybe<User>;
 };
 
 
+export type QueryPostsConnectionArgs = {
+  after: Scalars['String'];
+  first: Scalars['Int'];
+};
+
+
 export type QueryPostArgs = {
   id: Scalars['Int'];
+};
+
+export type PostsConnection = {
+  __typename?: 'PostsConnection';
+  pageInfo: PageInfo;
+  edges: Array<Edge>;
+};
+
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  hasNextPage: Scalars['Boolean'];
+  hasPreviousPage: Scalars['Boolean'];
+  startCursor: Scalars['String'];
+  endCursor: Scalars['String'];
+};
+
+export type Edge = {
+  __typename?: 'Edge';
+  cursor: Scalars['String'];
+  node: Post;
 };
 
 export type Post = {
@@ -36,6 +62,7 @@ export type Post = {
   creatorId: Scalars['Float'];
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
+  textSnippet: Scalars['String'];
 };
 
 export type User = {
@@ -227,15 +254,28 @@ export type MeQuery = (
   )> }
 );
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostsConnectionQueryVariables = Exact<{
+  first: Scalars['Int'];
+  after: Scalars['String'];
+}>;
 
 
-export type PostsQuery = (
+export type PostsConnectionQuery = (
   { __typename?: 'Query' }
-  & { posts: Array<(
-    { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title'>
-  )> }
+  & { postsConnection: (
+    { __typename?: 'PostsConnection' }
+    & { pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage'>
+    ), edges: Array<(
+      { __typename?: 'Edge' }
+      & Pick<Edge, 'cursor'>
+      & { node: (
+        { __typename?: 'Post' }
+        & Pick<Post, 'id' | 'title' | 'textSnippet' | 'createdAt' | 'updatedAt'>
+      ) }
+    )> }
+  ) }
 );
 
 export const RegularErrorFragmentDoc = gql`
@@ -341,17 +381,26 @@ export const MeDocument = gql`
 export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
 };
-export const PostsDocument = gql`
-    query Posts {
-  posts {
-    id
-    createdAt
-    updatedAt
-    title
+export const PostsConnectionDocument = gql`
+    query PostsConnection($first: Int!, $after: String!) {
+  postsConnection(first: $first, after: $after) {
+    pageInfo {
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        title
+        textSnippet
+        createdAt
+        updatedAt
+      }
+    }
   }
 }
     `;
 
-export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
-  return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
+export function usePostsConnectionQuery(options: Omit<Urql.UseQueryArgs<PostsConnectionQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<PostsConnectionQuery>({ query: PostsConnectionDocument, ...options });
 };

@@ -1,16 +1,14 @@
 import { devtoolsExchange } from '@urql/devtools';
 import { cacheExchange } from '@urql/exchange-graphcache';
+import { relayPagination } from '@urql/exchange-graphcache/extras';
 import Router from 'next/router';
 import { dedupExchange, Exchange, fetchExchange } from 'urql';
 import { pipe, tap } from 'wonka';
 import {
-  CreatePostMutation,
   LoginMutation,
   LogoutMutation,
   MeDocument,
   MeQuery,
-  PostsDocument,
-  PostsQuery,
   RegisterMutation,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
@@ -42,21 +40,13 @@ export const createUrqlClient = (ssrExchange?: any) => ({
 });
 
 const cache = cacheExchange({
+  resolvers: {
+    Query: {
+      postsConnection: relayPagination(),
+    },
+  },
   updates: {
     Mutation: {
-      // createPost: (_result, _, cache, __) => {
-      //   betterUpdateQuery<CreatePostMutation, PostsQuery>(
-      //     cache,
-      //     { query: PostsDocument},
-      //     _result,
-      //     (result, query) => {
-      //       if (result.createPost) {
-
-      //       }
-      //     }
-      //   )
-      // },
-
       logout: (_result, _, cache, __) => {
         betterUpdateQuery<LogoutMutation, MeQuery>(
           cache,
