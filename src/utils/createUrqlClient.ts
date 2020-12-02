@@ -14,6 +14,7 @@ import {
   RegisterMutation,
   VoteMutationVariables,
   Mutation,
+  DeletePostMutationVariables,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 import { isServer } from './isServer';
@@ -70,6 +71,18 @@ const cache = cacheExchange({
   },
   updates: {
     Mutation: {
+      deletePost: (_result, args, cache, info) => {
+        const { id } = args as DeletePostMutationVariables;
+        const { deletePost: successfullyDeleted } = _result as Data &
+          Pick<Mutation, 'deletePost'>;
+
+        if (!successfullyDeleted) {
+          return;
+        }
+
+        cache.invalidate({ __typename: 'Post', id });
+      },
+
       vote: (_result, args, cache, info) => {
         const { postId } = args as VoteMutationVariables;
         const {

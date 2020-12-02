@@ -5,22 +5,10 @@ import Layout from '../../components/Layout';
 import { PostQuery, usePostQuery } from '../../generated/graphql';
 import { createUrqlClient } from '../../utils/createUrqlClient';
 import { Text } from '@chakra-ui/react';
+import { getIntId } from '../../utils/getIntId';
 
 interface PostProps {}
 type PostData = PostQuery['post'];
-
-/**
- * @param queriedId ID got from the url
- * @returns The parsed int ID, or -1 if unsuccessful
- */
-function getIntId(queriedId: string | string[] | undefined) {
-  let intId = typeof queriedId === 'string' ? parseInt(queriedId) : -1;
-  if (isNaN(intId)) {
-    return -1;
-  } else {
-    return intId;
-  }
-}
 
 const Post: React.FC<PostProps> = ({}) => {
   const router = useRouter();

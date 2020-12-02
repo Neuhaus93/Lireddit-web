@@ -1,17 +1,8 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  Link,
-  Stack,
-  Text,
-} from '@chakra-ui/react';
+import { Button, Flex, Stack, Text } from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
-import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import { UpdootSection } from '../components/UpdootSection';
+import { PostInList } from '../components/PostInList';
 import {
   PostsConnectionQuery,
   usePostsConnectionQuery,
@@ -38,11 +29,15 @@ const Index = () => {
 
   useEffect(() => {
     if (data && data.postsConnection.edges) {
-      const posts = data.postsConnection.edges.map((edge) => {
-        return edge.node;
-      });
+      const newPosts = data.postsConnection.edges.reduce((prev, edge) => {
+        if (edge) {
+          const aux = [...prev];
+          aux.push(edge.node);
+          return aux;
+        } else return prev;
+      }, [] as PostsType);
 
-      setPosts(posts);
+      setPosts(newPosts);
     }
   }, [data]);
 
@@ -119,17 +114,19 @@ const Body = ({
       return (
         <>
           <Stack spacing={8}>
-            {posts.map((p) => (
-              <EachPost
-                key={p.id}
-                postId={p.id}
-                title={p.title}
-                text={p.textSnippet}
-                points={p.points}
-                voteStatus={p.voteStatus}
-                creatorName={p.creator.username}
-              />
-            ))}
+            {posts.map((p) =>
+              !p ? null : (
+                <PostInList
+                  key={p.id}
+                  postId={p.id}
+                  title={p.title}
+                  text={p.textSnippet}
+                  points={p.points}
+                  voteStatus={p.voteStatus}
+                  creatorName={p.creator.username}
+                />
+              )
+            )}
           </Stack>
           {hasNextPage && (
             <Flex>
@@ -145,40 +142,6 @@ const Body = ({
         </>
       );
   }
-};
-
-interface EachPostProps {
-  postId: number;
-  title: string;
-  text: string;
-  points: number;
-  voteStatus?: number | null;
-  creatorName: string;
-}
-
-const EachPost = (props: EachPostProps) => {
-  const { title, text, creatorName, points, postId, voteStatus } = props;
-  const shownText =
-    text.length === 50
-      ? text[49] === ' '
-        ? text.slice(0, 49) + '...'
-        : `${text}...`
-      : text;
-
-  return (
-    <Flex p={5} shadow='md' borderWidth='1px'>
-      <UpdootSection voteStatus={voteStatus} points={points} postId={postId} />
-      <Box ml={4}>
-        <NextLink href='/post/[id]' as={`/post/${postId}`}>
-          <Link>
-            <Heading fontSize='xl'>{title}</Heading>
-          </Link>
-        </NextLink>
-        <Text>posted by {creatorName}</Text>
-        <Text mt={4}>{shownText}</Text>
-      </Box>
-    </Flex>
-  );
 };
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
