@@ -6,16 +6,7 @@ query PostsConnection($first: Int!, $after: String!) {
     edges {
       cursor
       node {
-        id
-        title
-        textSnippet
-        points
-        creator {
-          id
-          username
-        }
-        createdAt
-        updatedAt
+        ...PostSnippet
       }
     }
   }

@@ -59,6 +59,7 @@ export type Post = {
   title: Scalars['String'];
   text: Scalars['String'];
   points: Scalars['Float'];
+  voteStatus?: Maybe<Scalars['Int']>;
   creatorId: Scalars['Float'];
   creator: User;
   createdAt: Scalars['String'];
@@ -77,7 +78,7 @@ export type User = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  vote: Scalars['Boolean'];
+  vote: VoteResult;
   createPost: Post;
   updatePost?: Maybe<Post>;
   deletePost?: Maybe<Scalars['Boolean']>;
@@ -131,6 +132,13 @@ export type MutationLoginArgs = {
   values: LoginInput;
 };
 
+export type VoteResult = {
+  __typename?: 'VoteResult';
+  voteWasRegistered: Scalars['Boolean'];
+  ammountChanged: Scalars['Int'];
+  newVoteStatus?: Maybe<Scalars['Int']>;
+};
+
 export type PostInput = {
   title: Scalars['String'];
   text: Scalars['String'];
@@ -158,6 +166,15 @@ export type LoginInput = {
   email: Scalars['String'];
   password: Scalars['String'];
 };
+
+export type PostSnippetFragment = (
+  { __typename?: 'Post' }
+  & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title' | 'points' | 'textSnippet' | 'voteStatus'>
+  & { creator: (
+    { __typename?: 'User' }
+    & Pick<User, 'id' | 'username'>
+  ) }
+);
 
 export type RegularErrorFragment = (
   { __typename?: 'FieldError' }
@@ -259,7 +276,10 @@ export type VoteMutationVariables = Exact<{
 
 export type VoteMutation = (
   { __typename?: 'Mutation' }
-  & Pick<Mutation, 'vote'>
+  & { vote: (
+    { __typename?: 'VoteResult' }
+    & Pick<VoteResult, 'voteWasRegistered' | 'ammountChanged' | 'newVoteStatus'>
+  ) }
 );
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
@@ -291,16 +311,27 @@ export type PostsConnectionQuery = (
       & Pick<Edge, 'cursor'>
       & { node: (
         { __typename?: 'Post' }
-        & Pick<Post, 'id' | 'title' | 'textSnippet' | 'points' | 'createdAt' | 'updatedAt'>
-        & { creator: (
-          { __typename?: 'User' }
-          & Pick<User, 'id' | 'username'>
-        ) }
+        & PostSnippetFragment
       ) }
     )> }
   ) }
 );
 
+export const PostSnippetFragmentDoc = gql`
+    fragment PostSnippet on Post {
+  id
+  createdAt
+  updatedAt
+  title
+  points
+  textSnippet
+  voteStatus
+  creator {
+    id
+    username
+  }
+}
+    `;
 export const RegularErrorFragmentDoc = gql`
     fragment RegularError on FieldError {
   field
@@ -395,7 +426,11 @@ export function useRegisterMutation() {
 };
 export const VoteDocument = gql`
     mutation Vote($value: Int!, $postId: Int!) {
-  vote(value: $value, postId: $postId)
+  vote(value: $value, postId: $postId) {
+    voteWasRegistered
+    ammountChanged
+    newVoteStatus
+  }
 }
     `;
 
@@ -422,21 +457,12 @@ export const PostsConnectionDocument = gql`
     edges {
       cursor
       node {
-        id
-        title
-        textSnippet
-        points
-        creator {
-          id
-          username
-        }
-        createdAt
-        updatedAt
+        ...PostSnippet
       }
     }
   }
 }
-    `;
+    ${PostSnippetFragmentDoc}`;
 
 export function usePostsConnectionQuery(options: Omit<Urql.UseQueryArgs<PostsConnectionQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostsConnectionQuery>({ query: PostsConnectionDocument, ...options });

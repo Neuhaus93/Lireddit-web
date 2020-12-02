@@ -117,6 +117,7 @@ const Body = ({
                 title={p.title}
                 text={p.textSnippet}
                 points={p.points}
+                voteStatus={p.voteStatus}
                 creatorName={p.creator.username}
               />
             ))}
@@ -142,11 +143,12 @@ interface EachPostProps {
   title: string;
   text: string;
   points: number;
+  voteStatus?: number | null;
   creatorName: string;
 }
 
 const EachPost = (props: EachPostProps) => {
-  const { title, text, creatorName, points, postId } = props;
+  const { title, text, creatorName, points, postId, voteStatus } = props;
   const shownText =
     text.length === 50
       ? text[49] === ' '
@@ -156,7 +158,7 @@ const EachPost = (props: EachPostProps) => {
 
   return (
     <Flex p={5} shadow='md' borderWidth='1px'>
-      <UpdootSection points={points} postId={postId} />
+      <UpdootSection voteStatus={voteStatus} points={points} postId={postId} />
       <Box ml={4}>
         <Heading fontSize='xl'>{title}</Heading>{' '}
         <Text>posted by {creatorName}</Text>

@@ -1,8 +1,10 @@
 import { devtoolsExchange } from '@urql/devtools';
-import { cacheExchange } from '@urql/exchange-graphcache';
+import { cacheExchange, Data } from '@urql/exchange-graphcache';
 import { relayPagination } from '@urql/exchange-graphcache/extras';
+import gql from 'graphql-tag';
+import { PartialNextContext, SSRExchange } from 'next-urql';
 import Router from 'next/router';
-import { dedupExchange, Exchange, fetchExchange } from 'urql';
+import { ClientOptions, dedupExchange, Exchange, fetchExchange } from 'urql';
 import { pipe, tap } from 'wonka';
 import {
   LoginMutation,
@@ -10,8 +12,11 @@ import {
   MeDocument,
   MeQuery,
   RegisterMutation,
+  VoteMutationVariables,
+  Mutation,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
+import { isServer } from './isServer';
 
 const errorExchange: Exchange = ({ forward }) => (ops$) => {
   return pipe(
@@ -24,20 +29,38 @@ const errorExchange: Exchange = ({ forward }) => (ops$) => {
   );
 };
 
-export const createUrqlClient = (ssrExchange?: any) => ({
-  url: 'http://localhost:4000/graphql',
-  fetchOptions: {
-    credentials: 'include' as const,
-  },
-  exchanges: [
-    devtoolsExchange,
-    dedupExchange,
-    cache,
-    errorExchange,
-    ssrExchange,
-    fetchExchange,
-  ],
-});
+export const createUrqlClient = (
+  ssrExchange: SSRExchange,
+  ctx?: PartialNextContext
+): ClientOptions => {
+  let cookie = '';
+
+  if (isServer()) {
+    if (ctx) {
+      cookie = ctx.req.headers.cookie;
+    }
+  }
+
+  return {
+    url: 'http://localhost:4000/graphql',
+    fetchOptions: {
+      credentials: 'include' as const,
+      headers: cookie
+        ? {
+            cookie,
+          }
+        : undefined,
+    },
+    exchanges: [
+      devtoolsExchange,
+      dedupExchange,
+      cache,
+      errorExchange,
+      ssrExchange,
+      fetchExchange,
+    ],
+  };
+};
 
 const cache = cacheExchange({
   resolvers: {
@@ -47,6 +70,43 @@ const cache = cacheExchange({
   },
   updates: {
     Mutation: {
+      vote: (_result, args, cache, info) => {
+        const { postId } = args as VoteMutationVariables;
+        const {
+          vote: { voteWasRegistered, ammountChanged, newVoteStatus },
+        } = _result as Data & Pick<Mutation, 'vote'>;
+
+        if (!voteWasRegistered) {
+          return;
+        }
+
+        const data = cache.readFragment(
+          gql`
+            fragment _ on Post {
+              id
+              points
+              voteStatus
+            }
+          `,
+          { id: postId, points: 0, voteStatus: null }
+        );
+
+        if (data) {
+          const newPoints = data.points + ammountChanged;
+
+          cache.writeFragment(
+            gql`
+              fragment __ on Post {
+                id
+                points
+                voteStatus
+              }
+            `,
+            { id: postId, points: newPoints, voteStatus: newVoteStatus }
+          );
+        }
+      },
+
       createPost: (_result, args, cache, info) => {
         const allFields = cache.inspectFields('Query');
         const fieldInfos = allFields.filter(
