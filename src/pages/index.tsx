@@ -14,7 +14,7 @@ export type PostsType = Array<
   PostsConnectionQuery['postsConnection']['edges'][number]['node']
 >;
 
-const POSTS_LIMIT = 5;
+const POSTS_LIMIT = 15;
 
 const Index = () => {
   const [variables, setVariables] = useState({

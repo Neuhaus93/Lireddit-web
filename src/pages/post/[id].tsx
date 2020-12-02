@@ -1,6 +1,7 @@
 import { Text } from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
 import React, { useEffect, useState } from 'react';
+import { EditDeletePostButtons } from '../../components/EditDeletePostButtons';
 import Layout from '../../components/Layout';
 import { PostQuery } from '../../generated/graphql';
 import { useGetPostFromUrl } from '../../hooks/useGetPostFromUrl';
@@ -37,13 +38,12 @@ const Post: React.FC<PostProps> = ({}) => {
 
   return (
     <Layout>
-      <div>
-        <Text fontSize='xl' fontWeight='bold'>
-          Post
-        </Text>
-        <Text fontSize='lg'>{post.title}</Text>
-        <Text>{post.text}</Text>
-      </div>
+      <Text fontSize='xl' fontWeight='bold'>
+        Post
+      </Text>
+      <Text fontSize='lg'>{post.title}</Text>
+      <Text>{post.text}</Text>
+      <EditDeletePostButtons postId={post.id} creatorId={post.creator.id} />
     </Layout>
   );
 };

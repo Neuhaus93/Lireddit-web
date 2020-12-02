@@ -1,5 +1,5 @@
 import { devtoolsExchange } from '@urql/devtools';
-import { cacheExchange, Data } from '@urql/exchange-graphcache';
+import { cacheExchange, Data, Cache } from '@urql/exchange-graphcache';
 import { relayPagination } from '@urql/exchange-graphcache/extras';
 import gql from 'graphql-tag';
 import { PartialNextContext, SSRExchange } from 'next-urql';
@@ -28,6 +28,16 @@ const errorExchange: Exchange = ({ forward }) => (ops$) => {
       }
     })
   );
+};
+
+const invalidateAllPosts = (cache: Cache) => {
+  const allFields = cache.inspectFields('Query');
+  const fieldInfos = allFields.filter(
+    (info) => info.fieldName === 'postsConnection'
+  );
+  fieldInfos.forEach((fi) => {
+    cache.invalidate('Query', 'postsConnection', fi.arguments || {});
+  });
 };
 
 export const createUrqlClient = (
@@ -121,13 +131,7 @@ const cache = cacheExchange({
       },
 
       createPost: (_result, args, cache, info) => {
-        const allFields = cache.inspectFields('Query');
-        const fieldInfos = allFields.filter(
-          (info) => info.fieldName === 'postsConnection'
-        );
-        fieldInfos.forEach((fi) => {
-          cache.invalidate('Query', 'postsConnection', fi.arguments || {});
-        });
+        invalidateAllPosts(cache);
       },
 
       logout: (_result, _, cache, __) => {
@@ -154,6 +158,7 @@ const cache = cacheExchange({
             }
           }
         );
+        invalidateAllPosts(cache);
       },
 
       register: (_result, _, cache, __) => {

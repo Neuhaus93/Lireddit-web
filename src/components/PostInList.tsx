@@ -1,18 +1,10 @@
-import {
-  Box,
-  Flex,
-  Grid,
-  Heading,
-  IconButton,
-  Link,
-  Text,
-} from '@chakra-ui/react';
+import { Box, Flex, Heading, Link, Text } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import React from 'react';
-import { UpdootSection } from './UpdootSection';
-import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
-import { useDeletePostMutation, useMeQuery } from '../generated/graphql';
+import { useMeQuery } from '../generated/graphql';
 import { PostsType } from '../pages';
+import { EditDeletePostButtons } from './EditDeletePostButtons';
+import { UpdootSection } from './UpdootSection';
 
 interface PostInListProps {
   post: PostsType[number];
@@ -21,11 +13,6 @@ interface PostInListProps {
 export const PostInList: React.FC<PostInListProps> = ({ post }) => {
   const { id, title, points, voteStatus, textSnippet, creator } = post;
   const [{ data }] = useMeQuery();
-  const [, deletePost] = useDeletePostMutation();
-
-  const handleDeletePost = () => {
-    deletePost({ id });
-  };
 
   return (
     <Flex p={5} shadow='md' borderWidth='1px'>
@@ -46,22 +33,7 @@ export const PostInList: React.FC<PostInListProps> = ({ post }) => {
           <Text flex={1} mt={4}>
             {formatText(textSnippet)}
           </Text>
-          {data?.me?.id !== post.creator.id ? null : (
-            <Grid columnGap={3} templateColumns='1fr 1fr'>
-              <NextLink href='/post/edit/[id]' as={`/post/edit/${id}`}>
-                <IconButton
-                  as={Link}
-                  aria-label='Edit post'
-                  icon={<EditIcon />}
-                />
-              </NextLink>
-              <IconButton
-                aria-label='Delete post'
-                icon={<DeleteIcon />}
-                onClick={handleDeletePost}
-              />
-            </Grid>
-          )}
+          <EditDeletePostButtons postId={id} creatorId={creator.id} />
         </Flex>
       </Box>
     </Flex>
