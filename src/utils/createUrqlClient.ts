@@ -38,7 +38,7 @@ export const createUrqlClient = (
 
   if (isServer()) {
     if (ctx) {
-      cookie = ctx.req.headers.cookie;
+      cookie = ctx?.req?.headers?.cookie;
     }
   }
 

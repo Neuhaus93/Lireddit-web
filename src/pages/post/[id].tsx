@@ -1,23 +1,16 @@
+import { Text } from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
-import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
-import { PostQuery, usePostQuery } from '../../generated/graphql';
+import { PostQuery } from '../../generated/graphql';
+import { useGetPostFromUrl } from '../../hooks/useGetPostFromUrl';
 import { createUrqlClient } from '../../utils/createUrqlClient';
-import { Text } from '@chakra-ui/react';
-import { getIntId } from '../../utils/getIntId';
 
 interface PostProps {}
 type PostData = PostQuery['post'];
 
 const Post: React.FC<PostProps> = ({}) => {
-  const router = useRouter();
-  const { id: queriedId } = router.query;
-  const id = getIntId(queriedId);
-  const [{ data, fetching }] = usePostQuery({
-    pause: id === -1,
-    variables: { id },
-  });
+  const [[{ data, fetching }]] = useGetPostFromUrl();
   const [post, setPost] = useState(undefined as PostData);
 
   useEffect(() => {

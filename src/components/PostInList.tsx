@@ -11,30 +11,27 @@ import NextLink from 'next/link';
 import React from 'react';
 import { UpdootSection } from './UpdootSection';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
-import { useDeletePostMutation } from '../generated/graphql';
+import { useDeletePostMutation, useMeQuery } from '../generated/graphql';
+import { PostsType } from '../pages';
 
 interface PostInListProps {
-  postId: number;
-  title: string;
-  text: string;
-  points: number;
-  voteStatus?: number | null;
-  creatorName: string;
+  post: PostsType[number];
 }
 
-export const PostInList: React.FC<PostInListProps> = (props) => {
-  const { title, text, creatorName, points, postId, voteStatus } = props;
+export const PostInList: React.FC<PostInListProps> = ({ post }) => {
+  const { id, title, points, voteStatus, textSnippet, creator } = post;
+  const [{ data }] = useMeQuery();
   const [, deletePost] = useDeletePostMutation();
 
   const handleDeletePost = () => {
-    deletePost({ id: postId });
+    deletePost({ id });
   };
 
   return (
     <Flex p={5} shadow='md' borderWidth='1px'>
-      <UpdootSection voteStatus={voteStatus} points={points} postId={postId} />
+      <UpdootSection voteStatus={voteStatus} points={points} postId={id} />
       <Box ml={4} w={'100%'}>
-        <NextLink href='/post/[id]' as={`/post/${postId}`}>
+        <NextLink href='/post/[id]' as={`/post/${id}`}>
           <Link display='inline-block'>
             <Heading fontSize='xl'>{title}</Heading>
           </Link>
@@ -43,26 +40,28 @@ export const PostInList: React.FC<PostInListProps> = (props) => {
           <Text as='span' fontSize='xs'>
             posted by
           </Text>{' '}
-          {creatorName}
+          {creator.username}
         </Text>
         <Flex>
           <Text flex={1} mt={4}>
-            {formatText(text)}
+            {formatText(textSnippet)}
           </Text>
-          <Grid columnGap={3} templateColumns='1fr 1fr'>
-            <NextLink href='/post//edit/[id]' as={`/post//edit/${postId}`}>
+          {data?.me?.id !== post.creator.id ? null : (
+            <Grid columnGap={3} templateColumns='1fr 1fr'>
+              <NextLink href='/post/edit/[id]' as={`/post/edit/${id}`}>
+                <IconButton
+                  as={Link}
+                  aria-label='Edit post'
+                  icon={<EditIcon />}
+                />
+              </NextLink>
               <IconButton
-                as={Link}
-                aria-label='Edit post'
-                icon={<EditIcon />}
+                aria-label='Delete post'
+                icon={<DeleteIcon />}
+                onClick={handleDeletePost}
               />
-            </NextLink>
-            <IconButton
-              aria-label='Delete post'
-              icon={<DeleteIcon />}
-              onClick={handleDeletePost}
-            />
-          </Grid>
+            </Grid>
+          )}
         </Flex>
       </Box>
     </Flex>

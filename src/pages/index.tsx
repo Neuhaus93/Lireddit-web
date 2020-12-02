@@ -10,7 +10,7 @@ import {
 import { createUrqlClient } from '../utils/createUrqlClient';
 
 type PageState = 'loading' | 'error' | 'success';
-type PostsType = Array<
+export type PostsType = Array<
   PostsConnectionQuery['postsConnection']['edges'][number]['node']
 >;
 
@@ -114,19 +114,7 @@ const Body = ({
       return (
         <>
           <Stack spacing={8}>
-            {posts.map((p) =>
-              !p ? null : (
-                <PostInList
-                  key={p.id}
-                  postId={p.id}
-                  title={p.title}
-                  text={p.textSnippet}
-                  points={p.points}
-                  voteStatus={p.voteStatus}
-                  creatorName={p.creator.username}
-                />
-              )
-            )}
+            {posts.map((p) => (!p ? null : <PostInList key={p.id} post={p} />))}
           </Stack>
           {hasNextPage && (
             <Flex>
