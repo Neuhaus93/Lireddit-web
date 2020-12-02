@@ -169,7 +169,7 @@ export type LoginInput = {
 
 export type PostSnippetFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title' | 'points' | 'textSnippet' | 'voteStatus'>
+  & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title' | 'points' | 'voteStatus'>
   & { creator: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
@@ -293,6 +293,20 @@ export type MeQuery = (
   )> }
 );
 
+export type PostQueryVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type PostQuery = (
+  { __typename?: 'Query' }
+  & { post?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'text'>
+    & PostSnippetFragment
+  )> }
+);
+
 export type PostsConnectionQueryVariables = Exact<{
   first: Scalars['Int'];
   after: Scalars['String'];
@@ -311,6 +325,7 @@ export type PostsConnectionQuery = (
       & Pick<Edge, 'cursor'>
       & { node: (
         { __typename?: 'Post' }
+        & Pick<Post, 'textSnippet'>
         & PostSnippetFragment
       ) }
     )> }
@@ -324,7 +339,6 @@ export const PostSnippetFragmentDoc = gql`
   updatedAt
   title
   points
-  textSnippet
   voteStatus
   creator {
     id
@@ -448,6 +462,18 @@ export const MeDocument = gql`
 export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
 };
+export const PostDocument = gql`
+    query Post($id: Int!) {
+  post(id: $id) {
+    ...PostSnippet
+    text
+  }
+}
+    ${PostSnippetFragmentDoc}`;
+
+export function usePostQuery(options: Omit<Urql.UseQueryArgs<PostQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<PostQuery>({ query: PostDocument, ...options });
+};
 export const PostsConnectionDocument = gql`
     query PostsConnection($first: Int!, $after: String!) {
   postsConnection(first: $first, after: $after) {
@@ -458,6 +484,7 @@ export const PostsConnectionDocument = gql`
       cursor
       node {
         ...PostSnippet
+        textSnippet
       }
     }
   }

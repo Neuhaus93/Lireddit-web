@@ -1,5 +1,14 @@
-import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Link,
+  Stack,
+  Text,
+} from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
+import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { UpdootSection } from '../components/UpdootSection';
@@ -160,7 +169,11 @@ const EachPost = (props: EachPostProps) => {
     <Flex p={5} shadow='md' borderWidth='1px'>
       <UpdootSection voteStatus={voteStatus} points={points} postId={postId} />
       <Box ml={4}>
-        <Heading fontSize='xl'>{title}</Heading>{' '}
+        <NextLink href='/post/[id]' as={`/post/${postId}`}>
+          <Link>
+            <Heading fontSize='xl'>{title}</Heading>
+          </Link>
+        </NextLink>
         <Text>posted by {creatorName}</Text>
         <Text mt={4}>{shownText}</Text>
       </Box>
