@@ -13,10 +13,10 @@ interface EditPostProps {}
 
 const EditPost: React.FC<EditPostProps> = ({}) => {
   const router = useRouter();
-  const [[{ data, fetching, error }], id] = useGetPostFromUrl();
-  const [, updatePost] = useUpdatePostMutation();
+  const [{ data, loading, error }, id] = useGetPostFromUrl();
+  const [updatePost] = useUpdatePostMutation();
 
-  if (fetching) {
+  if (loading) {
     return (
       <Layout>
         <div>Loading...</div>
@@ -40,8 +40,8 @@ const EditPost: React.FC<EditPostProps> = ({}) => {
       <Formik
         initialValues={{ title: data.post.title, text: data.post.text }}
         onSubmit={async (values) => {
-          const { error } = await updatePost({ id, ...values });
-          if (!error) {
+          const { errors } = await updatePost({ variables: { id, ...values } });
+          if (!errors) {
             router.push('/');
           }
         }}>
@@ -76,4 +76,4 @@ const EditPost: React.FC<EditPostProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: false })(EditPost);
+export default EditPost;

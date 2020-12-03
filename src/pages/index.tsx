@@ -1,31 +1,30 @@
 import { Button, Flex, Stack, Text } from '@chakra-ui/react';
-import { withUrqlClient } from 'next-urql';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import { PostInList } from '../components/PostInList';
 import {
+  Exact,
   PostsConnectionQuery,
   usePostsConnectionQuery,
 } from '../generated/graphql';
-import { createUrqlClient } from '../utils/createUrqlClient';
 
 type PageState = 'loading' | 'error' | 'success';
 export type PostsType = Array<
   PostsConnectionQuery['postsConnection']['edges'][number]['node']
 >;
 
-const POSTS_LIMIT = 15;
+const POSTS_LIMIT = 4;
 
 const Index = () => {
-  const [variables, setVariables] = useState({
-    first: POSTS_LIMIT,
-    after: '',
-  });
-  const [{ data, fetching }] = usePostsConnectionQuery({
-    variables,
-  });
   const [pageState, setPageState] = useState('loading' as PageState);
-  const [posts, setPosts] = useState([] as PostsType);
+  const [posts, setPosts] = useState<PostsType>([]);
+  const { data, loading, fetchMore } = usePostsConnectionQuery({
+    variables: {
+      first: POSTS_LIMIT,
+      after: '',
+    },
+    notifyOnNetworkStatusChange: true,
+  });
 
   useEffect(() => {
     if (data && data.postsConnection.edges) {
@@ -42,12 +41,12 @@ const Index = () => {
   }, [data]);
 
   useEffect(() => {
-    if (posts.length === 0 && fetching) {
+    if (posts.length === 0 && loading) {
       setPageState('loading');
       return;
     }
 
-    if (!fetching && !data) {
+    if (!loading && !data) {
       setPageState('error');
       return;
     }
@@ -56,7 +55,38 @@ const Index = () => {
       setPageState('success');
       return;
     }
-  }, [data, fetching]);
+  }, [data, loading]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!data) {
+      return;
+    }
+
+    const nodesToDisplay = data.postsConnection.edges.length - 1;
+
+    fetchMore<'first' | 'after'>({
+      variables: {
+        first: POSTS_LIMIT,
+        after: data.postsConnection.edges[nodesToDisplay].node.createdAt,
+      },
+      // updateQuery: (previousValues, { fetchMoreResult }) => {
+      //   if (!fetchMoreResult) {
+      //     return previousValues;
+      //   }
+      //   return {
+      //     __typename: 'Query',
+      //     postsConnection: {
+      //       __typename: 'PostsConnection',
+      //       pageInfo: fetchMoreResult.postsConnection.pageInfo,
+      //       edges: [
+      //         ...previousValues.postsConnection.edges,
+      //         ...fetchMoreResult.postsConnection.edges,
+      //       ],
+      //     },
+      //   };
+      // },
+    });
+  }, [data]);
 
   return (
     <Layout>
@@ -66,9 +96,9 @@ const Index = () => {
       <Body
         pageState={pageState}
         posts={posts}
-        fetching={fetching}
-        setVariables={setVariables}
+        isLoading={loading}
         hasNextPage={!!data?.postsConnection.pageInfo.hasNextPage}
+        handleLoadMore={handleLoadMore}
       />
     </Layout>
   );
@@ -76,33 +106,19 @@ const Index = () => {
 
 interface BodyProps {
   pageState: PageState;
-  fetching: boolean;
+  isLoading: boolean;
   posts: PostsType;
   hasNextPage: boolean;
-  setVariables: React.Dispatch<
-    React.SetStateAction<{
-      first: number;
-      after: string;
-    }>
-  >;
+  handleLoadMore: () => void;
 }
 
 const Body = ({
   pageState,
   posts,
-  fetching,
-  setVariables,
+  isLoading,
   hasNextPage,
+  handleLoadMore,
 }: BodyProps) => {
-  const handleLoadMore = () => {
-    if (posts) {
-      setVariables({
-        first: POSTS_LIMIT,
-        after: posts[posts.length - 1].createdAt,
-      });
-    }
-  };
-
   switch (pageState) {
     case 'error':
       return <div>Query Failed for some reason</div>;
@@ -119,7 +135,7 @@ const Body = ({
           {hasNextPage && (
             <Flex>
               <Button
-                isLoading={fetching}
+                isLoading={isLoading}
                 m='auto'
                 my={8}
                 onClick={handleLoadMore}>
@@ -132,4 +148,4 @@ const Body = ({
   }
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+export default Index;

@@ -11,14 +11,14 @@ import { createUrqlClient } from '../utils/createUrqlClient';
 export const ForgotPassword: React.FC<{}> = ({}) => {
   const router = useRouter();
   const [complete, setComplete] = useState(false);
-  const [, forgotPassword] = useForgotPasswordMutation();
+  const [forgotPassword] = useForgotPasswordMutation();
 
   return (
     <Wrapper variant='small'>
       <Formik
         initialValues={{ email: '' }}
         onSubmit={async (values) => {
-          const response = await forgotPassword(values);
+          await forgotPassword({ variables: values });
           setComplete(true);
         }}>
         {({ isSubmitting }) =>
@@ -49,4 +49,4 @@ export const ForgotPassword: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(ForgotPassword);
+export default ForgotPassword;

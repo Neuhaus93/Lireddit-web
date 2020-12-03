@@ -1,7 +1,6 @@
 import { Box, Flex, Heading, Link, Text } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import React from 'react';
-import { useMeQuery } from '../generated/graphql';
 import { PostsType } from '../pages';
 import { EditDeletePostButtons } from './EditDeletePostButtons';
 import { UpdootSection } from './UpdootSection';
@@ -12,7 +11,6 @@ interface PostInListProps {
 
 export const PostInList: React.FC<PostInListProps> = ({ post }) => {
   const { id, title, points, voteStatus, textSnippet, creator } = post;
-  const [{ data }] = useMeQuery();
 
   return (
     <Flex p={5} shadow='md' borderWidth='1px'>

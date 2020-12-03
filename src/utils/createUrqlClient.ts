@@ -1,5 +1,4 @@
-import { devtoolsExchange } from '@urql/devtools';
-import { cacheExchange, Data, Cache } from '@urql/exchange-graphcache';
+import { Cache, cacheExchange, Data } from '@urql/exchange-graphcache';
 import { relayPagination } from '@urql/exchange-graphcache/extras';
 import gql from 'graphql-tag';
 import { PartialNextContext, SSRExchange } from 'next-urql';
@@ -7,14 +6,14 @@ import Router from 'next/router';
 import { ClientOptions, dedupExchange, Exchange, fetchExchange } from 'urql';
 import { pipe, tap } from 'wonka';
 import {
+  DeletePostMutationVariables,
   LoginMutation,
   LogoutMutation,
   MeDocument,
   MeQuery,
+  Mutation,
   RegisterMutation,
   VoteMutationVariables,
-  Mutation,
-  DeletePostMutationVariables,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 import { isServer } from './isServer';
@@ -63,7 +62,6 @@ export const createUrqlClient = (
         : undefined,
     },
     exchanges: [
-      devtoolsExchange,
       dedupExchange,
       cache,
       errorExchange,

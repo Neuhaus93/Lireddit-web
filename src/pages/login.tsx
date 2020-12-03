@@ -11,7 +11,7 @@ import { toErrorMap } from '../utils/toErrorMap';
 import NextLink from 'next/link';
 
 const Login: React.FC<{}> = ({}) => {
-  const [, login] = useLoginMutation();
+  const [login] = useLoginMutation();
   const router = useRouter();
 
   return (
@@ -19,7 +19,7 @@ const Login: React.FC<{}> = ({}) => {
       <Formik
         initialValues={{ email: '', password: '' }}
         onSubmit={async (values, { setErrors }) => {
-          const response = await login({ values });
+          const response = await login({ variables: { values } });
 
           if (response.data?.login.errors) {
             setErrors(toErrorMap(response.data.login.errors));
@@ -67,4 +67,4 @@ const Login: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Login);
+export default Login;

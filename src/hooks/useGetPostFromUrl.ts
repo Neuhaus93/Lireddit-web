@@ -1,6 +1,6 @@
+import { QueryResult } from '@apollo/client';
 import { useRouter } from 'next/router';
-import { UseQueryResponse } from 'urql/dist/types/hooks';
-import { PostQuery, usePostQuery } from '../generated/graphql';
+import { Exact, PostQuery, usePostQuery } from '../generated/graphql';
 import { getIntId } from '../utils/getIntId';
 
 export const useGetPostFromUrl = () => {
@@ -8,8 +8,11 @@ export const useGetPostFromUrl = () => {
   const { id: queriedId } = router.query;
   const id = getIntId(queriedId);
   const queryResult = usePostQuery({
-    pause: id === -1,
+    skip: id === -1,
     variables: { id },
   });
-  return [queryResult, id] as [UseQueryResponse<PostQuery, object>, number];
+  return [queryResult, id] as [
+    QueryResult<PostQuery, Exact<{ id: number }>>,
+    number
+  ];
 };
