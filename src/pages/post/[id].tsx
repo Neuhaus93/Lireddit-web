@@ -1,9 +1,11 @@
+import { getDataFromTree } from '@apollo/react-ssr';
 import { Text } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { EditDeletePostButtons } from '../../components/EditDeletePostButtons';
 import Layout from '../../components/Layout';
 import { PostQuery } from '../../generated/graphql';
 import { useGetPostFromUrl } from '../../hooks/useGetPostFromUrl';
+import withApollo from '../../utils/withApollo';
 
 interface PostProps {}
 type PostData = PostQuery['post'];
@@ -54,4 +56,4 @@ const Loading: React.FC<{}> = ({}) => {
   );
 };
 
-export default Post;
+export default withApollo(Post, { getDataFromTree });

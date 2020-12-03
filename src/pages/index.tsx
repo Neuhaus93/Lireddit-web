@@ -1,24 +1,20 @@
 import { Button, Flex, Stack, Text } from '@chakra-ui/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import { PostInList } from '../components/PostInList';
-import {
-  Exact,
-  PostsConnectionQuery,
-  usePostsConnectionQuery,
-} from '../generated/graphql';
+import { PostsQuery, usePostsQuery } from '../generated/graphql';
+import withApollo from '../utils/withApollo';
+import { getDataFromTree } from '@apollo/react-ssr';
 
 type PageState = 'loading' | 'error' | 'success';
-export type PostsType = Array<
-  PostsConnectionQuery['postsConnection']['edges'][number]['node']
->;
+export type PostsType = Array<PostsQuery['posts']['edges'][number]>;
 
-const POSTS_LIMIT = 4;
+export const POSTS_LIMIT = 4;
 
 const Index = () => {
   const [pageState, setPageState] = useState('loading' as PageState);
   const [posts, setPosts] = useState<PostsType>([]);
-  const { data, loading, fetchMore } = usePostsConnectionQuery({
+  const { data, loading, fetchMore, error } = usePostsQuery({
     variables: {
       first: POSTS_LIMIT,
       after: '',
@@ -27,11 +23,11 @@ const Index = () => {
   });
 
   useEffect(() => {
-    if (data && data.postsConnection.edges) {
-      const newPosts = data.postsConnection.edges.reduce((prev, edge) => {
+    if (data && data.posts.edges) {
+      const newPosts = data.posts.edges.reduce((prev, edge) => {
         if (edge) {
           const aux = [...prev];
-          aux.push(edge.node);
+          aux.push(edge);
           return aux;
         } else return prev;
       }, [] as PostsType);
@@ -46,7 +42,7 @@ const Index = () => {
       return;
     }
 
-    if (!loading && !data) {
+    if (error) {
       setPageState('error');
       return;
     }
@@ -62,29 +58,12 @@ const Index = () => {
       return;
     }
 
-    const nodesToDisplay = data.postsConnection.edges.length - 1;
-
+    const nodesToDisplay = data.posts.edges.length - 1;
     fetchMore<'first' | 'after'>({
       variables: {
         first: POSTS_LIMIT,
-        after: data.postsConnection.edges[nodesToDisplay].node.createdAt,
+        after: data.posts.edges[nodesToDisplay].createdAt,
       },
-      // updateQuery: (previousValues, { fetchMoreResult }) => {
-      //   if (!fetchMoreResult) {
-      //     return previousValues;
-      //   }
-      //   return {
-      //     __typename: 'Query',
-      //     postsConnection: {
-      //       __typename: 'PostsConnection',
-      //       pageInfo: fetchMoreResult.postsConnection.pageInfo,
-      //       edges: [
-      //         ...previousValues.postsConnection.edges,
-      //         ...fetchMoreResult.postsConnection.edges,
-      //       ],
-      //     },
-      //   };
-      // },
     });
   }, [data]);
 
@@ -97,7 +76,7 @@ const Index = () => {
         pageState={pageState}
         posts={posts}
         isLoading={loading}
-        hasNextPage={!!data?.postsConnection.pageInfo.hasNextPage}
+        hasNextPage={!!data?.posts.pageInfo.hasNextPage}
         handleLoadMore={handleLoadMore}
       />
     </Layout>
@@ -148,4 +127,5 @@ const Body = ({
   }
 };
 
-export default Index;
+// export default withApollo(Index);
+export default withApollo(Index, { getDataFromTree });

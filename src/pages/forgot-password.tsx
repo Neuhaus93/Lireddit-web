@@ -7,6 +7,7 @@ import { InputField } from '../components/InputField';
 import { Wrapper } from '../components/Wrapper';
 import { useForgotPasswordMutation } from '../generated/graphql';
 import { createUrqlClient } from '../utils/createUrqlClient';
+import withApollo from '../utils/withApollo';
 
 export const ForgotPassword: React.FC<{}> = ({}) => {
   const router = useRouter();
@@ -49,4 +50,4 @@ export const ForgotPassword: React.FC<{}> = ({}) => {
   );
 };
 
-export default ForgotPassword;
+export default withApollo(ForgotPassword);

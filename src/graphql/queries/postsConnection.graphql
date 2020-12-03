@@ -1,14 +1,10 @@
-query PostsConnection($first: Int!, $after: String!) {
-  postsConnection(first: $first, after: $after) {
+query Posts($first: Int!, $after: String!) {
+  posts(first: $first, after: $after) {
     pageInfo {
       hasNextPage
     }
     edges {
-      cursor
-      node {
-        ...PostSnippet
-        textSnippet
-      }
+      ...PostSnippet
     }
   }
 }

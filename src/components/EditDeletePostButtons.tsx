@@ -1,5 +1,5 @@
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
-import { Box, Grid, IconButton, Link } from '@chakra-ui/react';
+import { Box, IconButton, Link } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import React from 'react';
 import { useDeletePostMutation, useMeQuery } from '../generated/graphql';
@@ -30,7 +30,13 @@ export const EditDeletePostButtons: React.FC<EditDeletePostButtonsProps> = ({
         icon={<DeleteIcon />}
         ml={4}
         onClick={() => {
-          deletePost({ variables: { id: postId } });
+          deletePost({
+            variables: { id: postId },
+            update: (cache) => {
+              cache.evict({ id: 'Post:' + postId });
+              cache.gc();
+            },
+          });
         }}
       />
     </Box>

@@ -16,13 +16,13 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
-  postsConnection: PostsConnection;
+  posts: Posts;
   post?: Maybe<Post>;
   me?: Maybe<User>;
 };
 
 
-export type QueryPostsConnectionArgs = {
+export type QueryPostsArgs = {
   after: Scalars['String'];
   first: Scalars['Int'];
 };
@@ -32,10 +32,10 @@ export type QueryPostArgs = {
   id: Scalars['Int'];
 };
 
-export type PostsConnection = {
-  __typename?: 'PostsConnection';
+export type Posts = {
+  __typename?: 'Posts';
   pageInfo: PageInfo;
-  edges: Array<Edge>;
+  edges: Array<Post>;
 };
 
 export type PageInfo = {
@@ -44,12 +44,6 @@ export type PageInfo = {
   hasPreviousPage: Scalars['Boolean'];
   startCursor: Scalars['String'];
   endCursor: Scalars['String'];
-};
-
-export type Edge = {
-  __typename?: 'Edge';
-  cursor: Scalars['String'];
-  node: Post;
 };
 
 export type Post = {
@@ -169,7 +163,7 @@ export type LoginInput = {
 
 export type PostSnippetFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title' | 'points' | 'voteStatus'>
+  & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title' | 'points' | 'voteStatus' | 'textSnippet'>
   & { creator: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
@@ -332,27 +326,22 @@ export type PostQuery = (
   )> }
 );
 
-export type PostsConnectionQueryVariables = Exact<{
+export type PostsQueryVariables = Exact<{
   first: Scalars['Int'];
   after: Scalars['String'];
 }>;
 
 
-export type PostsConnectionQuery = (
+export type PostsQuery = (
   { __typename?: 'Query' }
-  & { postsConnection: (
-    { __typename?: 'PostsConnection' }
+  & { posts: (
+    { __typename?: 'Posts' }
     & { pageInfo: (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage'>
     ), edges: Array<(
-      { __typename?: 'Edge' }
-      & Pick<Edge, 'cursor'>
-      & { node: (
-        { __typename?: 'Post' }
-        & Pick<Post, 'textSnippet'>
-        & PostSnippetFragment
-      ) }
+      { __typename?: 'Post' }
+      & PostSnippetFragment
     )> }
   ) }
 );
@@ -365,6 +354,7 @@ export const PostSnippetFragmentDoc = gql`
   title
   points
   voteStatus
+  textSnippet
   creator {
     id
     username
@@ -758,46 +748,42 @@ export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQ
 export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
-export const PostsConnectionDocument = gql`
-    query PostsConnection($first: Int!, $after: String!) {
-  postsConnection(first: $first, after: $after) {
+export const PostsDocument = gql`
+    query Posts($first: Int!, $after: String!) {
+  posts(first: $first, after: $after) {
     pageInfo {
       hasNextPage
     }
     edges {
-      cursor
-      node {
-        ...PostSnippet
-        textSnippet
-      }
+      ...PostSnippet
     }
   }
 }
     ${PostSnippetFragmentDoc}`;
 
 /**
- * __usePostsConnectionQuery__
+ * __usePostsQuery__
  *
- * To run a query within a React component, call `usePostsConnectionQuery` and pass it any options that fit your needs.
- * When your component renders, `usePostsConnectionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `usePostsQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePostsQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = usePostsConnectionQuery({
+ * const { data, loading, error } = usePostsQuery({
  *   variables: {
  *      first: // value for 'first'
  *      after: // value for 'after'
  *   },
  * });
  */
-export function usePostsConnectionQuery(baseOptions: Apollo.QueryHookOptions<PostsConnectionQuery, PostsConnectionQueryVariables>) {
-        return Apollo.useQuery<PostsConnectionQuery, PostsConnectionQueryVariables>(PostsConnectionDocument, baseOptions);
+export function usePostsQuery(baseOptions: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
+        return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, baseOptions);
       }
-export function usePostsConnectionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsConnectionQuery, PostsConnectionQueryVariables>) {
-          return Apollo.useLazyQuery<PostsConnectionQuery, PostsConnectionQueryVariables>(PostsConnectionDocument, baseOptions);
+export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsQuery, PostsQueryVariables>) {
+          return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, baseOptions);
         }
-export type PostsConnectionQueryHookResult = ReturnType<typeof usePostsConnectionQuery>;
-export type PostsConnectionLazyQueryHookResult = ReturnType<typeof usePostsConnectionLazyQuery>;
-export type PostsConnectionQueryResult = Apollo.QueryResult<PostsConnectionQuery, PostsConnectionQueryVariables>;
+export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
+export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
+export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;

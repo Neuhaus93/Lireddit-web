@@ -6,6 +6,7 @@ import { InputField, TextareaField } from '../components/InputField';
 import Layout from '../components/Layout';
 import { useCreatePostMutation } from '../generated/graphql';
 import { useIsAuth } from '../hooks/useIsAuth';
+import withApollo from '../utils/withApollo';
 
 const initialValues = {
   title: '',
@@ -22,8 +23,13 @@ const CreatePost: React.FC<{}> = ({}) => {
       <Formik
         initialValues={initialValues}
         onSubmit={async (values) => {
-          const { errors } = await createPost({ variables: { input: values } });
-          if (errors) {
+          const { errors } = await createPost({
+            variables: { input: values },
+            update: (cache) => {
+              cache.evict({ fieldName: 'posts' });
+            },
+          });
+          if (!errors) {
             router.push('/');
           }
         }}>
@@ -54,4 +60,4 @@ const CreatePost: React.FC<{}> = ({}) => {
   );
 };
 
-export default CreatePost;
+export default withApollo(CreatePost);

@@ -1,13 +1,12 @@
 import { Box, Button, Text } from '@chakra-ui/react';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { InputField, TextareaField } from '../../../components/InputField';
 import Layout from '../../../components/Layout';
 import { useUpdatePostMutation } from '../../../generated/graphql';
 import { useGetPostFromUrl } from '../../../hooks/useGetPostFromUrl';
-import { createUrqlClient } from '../../../utils/createUrqlClient';
+import withApollo from '../../../utils/withApollo';
 
 interface EditPostProps {}
 
@@ -76,4 +75,4 @@ const EditPost: React.FC<EditPostProps> = ({}) => {
   );
 };
 
-export default EditPost;
+export default withApollo(EditPost);

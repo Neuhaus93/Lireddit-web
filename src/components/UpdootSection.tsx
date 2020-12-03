@@ -1,7 +1,14 @@
+import { ApolloCache, gql } from '@apollo/client';
 import { ChevronUpIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { Flex, IconButton } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { useVoteMutation } from '../generated/graphql';
+import {
+  PostSnippetFragment,
+  PostSnippetFragmentDoc,
+  useVoteMutation,
+  VoteMutation,
+  VoteResult,
+} from '../generated/graphql';
 
 interface UpdootSectionProps {
   postId: number;
@@ -9,6 +16,48 @@ interface UpdootSectionProps {
   voteStatus?: number | null;
 }
 type LoadingState = 'updoot-loading' | 'downdoot-loading' | 'not-loading';
+
+const updateAfterVote = (
+  value: number,
+  postId: number,
+  cache: ApolloCache<VoteMutation>,
+  result: VoteMutation | null | undefined
+) => {
+  if (!result) {
+    return;
+  }
+  const {
+    vote: { ammountChanged, newVoteStatus },
+  } = result;
+
+  const data = cache.readFragment<Pick<PostSnippetFragment, 'id' | 'points'>>({
+    id: 'Post:' + postId,
+    fragment: gql`
+      fragment _ on Post {
+        id
+        points
+      }
+    `,
+  });
+
+  if (data) {
+    const newPoints = data.points + ammountChanged;
+
+    cache.writeFragment<Pick<PostSnippetFragment, 'points' | 'voteStatus'>>({
+      id: 'Post:' + postId,
+      fragment: gql`
+        fragment __ on Post {
+          points
+          voteStatus
+        }
+      `,
+      data: {
+        points: newPoints,
+        voteStatus: newVoteStatus,
+      },
+    });
+  }
+};
 
 export const UpdootSection: React.FC<UpdootSectionProps> = ({
   points,
@@ -32,6 +81,8 @@ export const UpdootSection: React.FC<UpdootSectionProps> = ({
                 postId,
                 value: 1,
               },
+              update: (cache, { data }) =>
+                updateAfterVote(1, postId, cache, data),
             });
           } catch {
           } finally {
@@ -54,6 +105,8 @@ export const UpdootSection: React.FC<UpdootSectionProps> = ({
                 postId,
                 value: -1,
               },
+              update: (cache, { data }) =>
+                updateAfterVote(-1, postId, cache, data),
             });
           } catch {
           } finally {
